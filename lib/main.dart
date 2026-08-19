@@ -1,43 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:medicine_tracker/screens/home_screen.dart';
 import 'package:medicine_tracker/services/database_service.dart';
-
-final notificationsPlugin = FlutterLocalNotificationsPlugin();
-
-Future<void> _initNotifications() async {
-  const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
-  const initSettings = InitializationSettings(android: androidSettings);
-  await notificationsPlugin.initialize(settings: initSettings);
-
-  final androidImplementation = notificationsPlugin
-      .resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin
-      >();
-  await androidImplementation?.requestNotificationsPermission();
-  await showNotifications();
-}
-
-Future<void> showNotifications() async {
-  final androidDetails = AndroidNotificationDetails(
-    'test channel',
-    'test notifications',
-    importance: Importance.high,
-    priority: Priority.high,
-  );
-  final details = NotificationDetails(android: androidDetails);
-  notificationsPlugin.show(
-    id: 0,
-    title: 'Test notifications',
-    body: 'if you see this notifications are working',
-    notificationDetails: details,
-  );
-}
+import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
+import 'package:medicine_tracker/services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  tz.initializeTimeZones();
+  tz.setLocalLocation(tz.getLocation('Asia/Kolkata'));
   await DatabaseService.instance.database;
-  await _initNotifications();
+  await NotificationService.instance.initNotification();
   runApp(MyApp());
 }
 

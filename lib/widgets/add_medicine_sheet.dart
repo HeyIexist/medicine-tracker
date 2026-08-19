@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:medicine_tracker/services/database_service.dart';
+import 'package:medicine_tracker/services/notification_service.dart';
 
 class AddMedicineSheet extends StatefulWidget {
   const AddMedicineSheet({super.key});
@@ -38,11 +39,17 @@ class _AddMedicineSheetState extends State<AddMedicineSheet> {
       return;
     }
     final db = await DatabaseService.instance.database;
-    await db.insert('medicines', {
+    final id = await db.insert('medicines', {
       'name': name,
       'createdAt': DateTime.now().toIso8601String(),
       'expiryDate': _pickedDate!.toIso8601String(),
     });
+
+    NotificationService.instance.scheduleExpiryNotification(
+      id: id,
+      name: name,
+      expiryDate: _pickedDate!,
+    );
 
     if (mounted) Navigator.of(context).pop();
   }

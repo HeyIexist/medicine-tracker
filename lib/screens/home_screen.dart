@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:medicine_tracker/services/database_service.dart';
+import 'package:medicine_tracker/services/notification_service.dart';
 import 'package:medicine_tracker/widgets/add_medicine_sheet.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -43,9 +44,10 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Medicine Tracker'),
-        actions: [IconButton(onPressed: addMedicine, icon: Icon(Icons.add))],
+      appBar: AppBar(title: Text('Medicine Tracker')),
+      floatingActionButton: FloatingActionButton(
+        onPressed: addMedicine,
+        child: Icon(Icons.add),
       ),
       body: medicines.isEmpty
           ? Center(
@@ -115,9 +117,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         .closed
                         .then((reason) {
                           // Only delete from DB if it wasn't undone
-                         
+
                           if (reason != SnackBarClosedReason.action) {
                             _deleteMedicine(removedMedicine['id']);
+                            NotificationService.instance.cancelNotification(
+                              removedMedicine['id'],
+                            );
                           }
                         });
                   },
