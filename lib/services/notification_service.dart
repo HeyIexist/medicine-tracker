@@ -26,7 +26,13 @@ class NotificationService {
     required String name,
     required DateTime expiryDate,
   }) async {
-    final reminderDate = expiryDate.subtract(const Duration(days: 7));
+    final reminderDate = DateTime(
+      expiryDate.year,
+      expiryDate.month,
+      expiryDate.day - 7,
+      9,
+      0,
+    );
     final now = DateTime.now();
     final androidDetails = AndroidNotificationDetails(
       'expiry_channel',
@@ -35,17 +41,24 @@ class NotificationService {
     final notificationDetails = NotificationDetails(android: androidDetails);
     final androidScheduleMode = AndroidScheduleMode.alarmClock;
     if (reminderDate.isAfter(now)) {
+      final expiresIn = expiryDate.difference(now).inDays;
       await notificationPlugin.zonedSchedule(
         id: id,
         scheduledDate: tz.TZDateTime.from(reminderDate, tz.local),
         notificationDetails: notificationDetails,
         androidScheduleMode: androidScheduleMode,
+        title: '$name expires soon',
+        body: 'Expires in $expiresIn days',
       );
     } else {
+      final alreadyExpired = expiryDate.isBefore(now);
+      final daysLeft = expiryDate.difference(now).inDays;
       await notificationPlugin.show(
         id: id,
-        title: '$name expired',
-        body: 'Expired medicine found',
+        title: alreadyExpired ? '$name expired' : '$name expires soon',
+        body: alreadyExpired
+            ? 'Expired medicine found'
+            : 'Expires in $daysLeft days',
         notificationDetails: notificationDetails,
       );
     }
