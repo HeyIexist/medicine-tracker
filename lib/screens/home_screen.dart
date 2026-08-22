@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:medicine_tracker/services/database_service.dart';
 import 'package:medicine_tracker/services/notification_service.dart';
 import 'package:medicine_tracker/widgets/add_medicine_sheet.dart';
+import 'package:medicine_tracker/widgets/medicine_info_dialogue.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -10,7 +11,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   List<Map<String, dynamic>> medicines = [];
 
   void _loadMedicines() async {
@@ -26,10 +27,31 @@ class _HomeScreenState extends State<HomeScreen> {
     await db.delete('medicines', where: 'id = ?', whereArgs: [id]);
   }
 
+  void _showMedicineIntoDialogue(String medicine_name) {
+    showDialog(
+      context: context,
+      builder: (ctx) => MedicineInfoDialog(medicineName: medicine_name),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadMedicines();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _loadMedicines();
+    }
   }
 
   void addMedicine() async {
@@ -132,8 +154,18 @@ class _HomeScreenState extends State<HomeScreen> {
                       vertical: 3,
                     ),
                     child: Card(
-                      margin: const EdgeInsets.symmetric(vertical: 6),
+                      margin: const EdgeInsets.symmetric(
+                        vertical: 6,
+                        horizontal: 3,
+                      ),
+                      color: daysLeft <= 0
+                          ? Colors.red.shade100
+                          : daysLeft <= 7
+                          ? Colors.orange.shade100
+                          : Colors.green.shade100,
                       child: ListTile(
+                        onTap: () =>
+                            _showMedicineIntoDialogue(med['name']),
                         title: Text(med['name']),
                         subtitle: Text(
                           daysLeft < 0
@@ -141,15 +173,6 @@ class _HomeScreenState extends State<HomeScreen> {
                               : daysLeft == 0
                               ? 'Expires today'
                               : 'Expires in $daysLeft day(s)',
-                        ),
-                        trailing: Icon(
-                          Icons.circle,
-                          size: 12,
-                          color: daysLeft < 0
-                              ? Colors.red
-                              : daysLeft <= 7
-                              ? Colors.orange
-                              : Colors.green,
                         ),
                       ),
                     ),

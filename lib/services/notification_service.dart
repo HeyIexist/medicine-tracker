@@ -4,8 +4,11 @@ import 'package:timezone/timezone.dart' as tz;
 
 class NotificationService {
   NotificationService._internal();
+  
   static final instance = NotificationService._internal();
+
   final notificationPlugin = FlutterLocalNotificationsPlugin();
+
   Future<void> initNotification() async {
     final androidSettings = AndroidInitializationSettings(
       '@mipmap/ic_launcher',
@@ -26,6 +29,7 @@ class NotificationService {
     required String name,
     required DateTime expiryDate,
   }) async {
+    
     final reminderDate = DateTime(
       expiryDate.year,
       expiryDate.month,

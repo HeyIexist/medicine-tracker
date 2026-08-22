@@ -9,9 +9,9 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   tz.initializeTimeZones();
   tz.setLocalLocation(tz.getLocation('Asia/Kolkata'));
-  runApp(MyApp());
-  await DatabaseService.instance.database;
   await NotificationService.instance.initNotification();
+  await DatabaseService.instance.database;
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
