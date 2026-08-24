@@ -10,8 +10,13 @@ class AddMedicineSheet extends StatefulWidget {
 }
 
 class _AddMedicineSheetState extends State<AddMedicineSheet> {
-  final _nameController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  String? _name;
   DateTime? _pickedDate;
+  TimeOfDay? _reminderTime;
+  String? _mealTiming;
+  String? _dateOrTimeError;
+
   void _pickDate() async {
     final now = DateTime.now();
     final pickedDate = await showDatePicker(
@@ -21,43 +26,65 @@ class _AddMedicineSheetState extends State<AddMedicineSheet> {
     );
     setState(() {
       _pickedDate = pickedDate;
+      _dateOrTimeError = null;
+    });
+  }
+
+  void _pickTime() async {
+    final pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+    setState(() {
+      _reminderTime = pickedTime;
+      _dateOrTimeError = null;
     });
   }
 
   Future<void> addMedicineToDb() async {
-    final name = _nameController.text.trim();
-    if (name.isEmpty || _pickedDate == null) {
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          persist: false,
-          content: Text(
-            'Please enter a valid medicine name and its expiry date',
-          ),
-        ),
-      );
+    final isValid = _formKey.currentState!.validate();
+
+    if (_pickedDate == null && _reminderTime == null) {
+      setState(() {
+        _dateOrTimeError =
+            'Please set an expiry date, a reminder time, or both';
+      });
       return;
     }
+
+    if (!isValid) return;
+
+    setState(() => _dateOrTimeError = null);
+    _formKey.currentState!.save();
+    print('About to insert — mealTiming is: $_mealTiming');
     final db = await DatabaseService.instance.database;
     final id = await db.insert('medicines', {
-      'name': name,
+      'name': _name,
       'createdAt': DateTime.now().toIso8601String(),
-      'expiryDate': _pickedDate!.toIso8601String(),
+      'expiryDate': _pickedDate?.toIso8601String(),
+      'reminderTime': _reminderTime != null
+          ? '${_reminderTime!.hour}:${_reminderTime!.minute}'
+          : null,
+      'mealTiming': _mealTiming,
     });
 
-    NotificationService.instance.scheduleExpiryNotification(
-      id: id,
-      name: name,
-      expiryDate: _pickedDate!,
-    );
+    if (_pickedDate != null) {
+      NotificationService.instance.scheduleExpiryNotification(
+        id: id + 1000,
+        name: _name!,
+        expiryDate: _pickedDate!,
+      );
+    }
+
+    if (_reminderTime != null) {
+      NotificationService.instance.scheduleDailyReminder(
+        id: id,
+        name: _name!,
+        time: _reminderTime!,
+      );
+    }
 
     if (mounted) Navigator.of(context).pop();
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    super.dispose();
   }
 
   @override
@@ -69,44 +96,90 @@ class _AddMedicineSheetState extends State<AddMedicineSheet> {
         right: 20,
         bottom: MediaQuery.of(context).viewInsets.bottom + 50,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: _nameController,
-            decoration: InputDecoration(
-              labelText: 'Enter medicine name. (eg. Paracetamol)',
-            ),
-          ),
-          const SizedBox(height: 10),
-          Row(
+      child: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                _pickedDate == null
-                    ? 'Select expiry date'
-                    : _pickedDate.toString().split(' ')[0],
+              TextFormField(
+                decoration: const InputDecoration(
+                  labelText: 'Enter medicine name. (eg. Paracetamol)',
+                ),
+                validator: (value) => (value == null || value.trim().isEmpty)
+                    ? 'Name is required'
+                    : null,
+                onSaved: (value) => _name = value?.trim(),
               ),
-              IconButton(
-                onPressed: _pickDate,
-                icon: const Icon(Icons.calendar_month),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Text(
+                    _pickedDate == null
+                        ? 'Select expiry date'
+                        : _pickedDate.toString().split(' ')[0],
+                  ),
+                  IconButton(
+                    onPressed: _pickDate,
+                    icon: const Icon(Icons.calendar_month),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  Text(
+                    _reminderTime == null
+                        ? 'Select reminder time'
+                        : _reminderTime!.format(context),
+                  ),
+                  IconButton(
+                    onPressed: _pickTime,
+                    icon: const Icon(Icons.access_time),
+                  ),
+                ],
+              ),
+              if (_reminderTime != null) ...[
+                const SizedBox(height: 10),
+                DropdownButtonFormField<String>(
+                  initialValue: _mealTiming,
+                  decoration: const InputDecoration(
+                    labelText: 'Meal timing (optional)',
+                  ),
+                  items: const [
+                    DropdownMenuItem(
+                      value: 'before',
+                      child: Text('Before meal'),
+                    ),
+                    DropdownMenuItem(value: 'after', child: Text('After meal')),
+                  ],
+                  onChanged: (value) => setState(() => _mealTiming = value),
+                ),
+              ],
+              if (_dateOrTimeError != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  _dateOrTimeError!,
+                  style: const TextStyle(color: Colors.red, fontSize: 13),
+                ),
+              ],
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Cancel'),
+                  ),
+                  ElevatedButton(
+                    onPressed: addMedicineToDb,
+                    child: const Text('Save medicine'),
+                  ),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: addMedicineToDb,
-                child: const Text('Save medicine'),
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }

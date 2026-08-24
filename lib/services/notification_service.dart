@@ -1,10 +1,11 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 // import 'package:timezone/standalone.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 class NotificationService {
   NotificationService._internal();
-  
+
   static final instance = NotificationService._internal();
 
   final notificationPlugin = FlutterLocalNotificationsPlugin();
@@ -22,6 +23,7 @@ class NotificationService {
           AndroidFlutterLocalNotificationsPlugin
         >();
     await requestPermission?.requestNotificationsPermission();
+    await requestPermission?.requestExactAlarmsPermission();
   }
 
   Future<void> scheduleExpiryNotification({
@@ -29,7 +31,6 @@ class NotificationService {
     required String name,
     required DateTime expiryDate,
   }) async {
-    
     final reminderDate = DateTime(
       expiryDate.year,
       expiryDate.month,
@@ -47,7 +48,7 @@ class NotificationService {
     if (reminderDate.isAfter(now)) {
       final expiresIn = expiryDate.difference(now).inDays;
       await notificationPlugin.zonedSchedule(
-        id: id,
+        id: id + 10000,
         scheduledDate: tz.TZDateTime.from(reminderDate, tz.local),
         notificationDetails: notificationDetails,
         androidScheduleMode: androidScheduleMode,
@@ -66,6 +67,46 @@ class NotificationService {
         notificationDetails: notificationDetails,
       );
     }
+  }
+
+  Future<void> scheduleDailyReminder({
+    required int id,
+    required String name,
+    required TimeOfDay time,
+    String? mealTiming,
+  }) async {
+    final now = DateTime.now();
+    var scheduledDate = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      time.hour,
+      time.minute,
+    );
+    if (scheduledDate.isBefore(now)) {
+      scheduledDate = scheduledDate.add(const Duration(days: 1));
+    }
+    final androidDetails = AndroidNotificationDetails(
+      'reminder_channel',
+      'Medicine reminder alerts',
+    );
+    final notificationDetails = NotificationDetails(android: androidDetails);
+    final mealText = mealTiming == 'before'
+        ? ' (before meal)'
+        : mealTiming == 'after'
+        ? ' (after meal)'
+        : '';
+    await notificationPlugin.zonedSchedule(
+      
+      id: id,
+      title: 'Time to take $name',
+      body: 'Reminder to take your medicine $mealText',
+      scheduledDate: tz.TZDateTime.from(scheduledDate, tz.local),
+      notificationDetails: notificationDetails,
+      androidScheduleMode: AndroidScheduleMode.alarmClock,
+      matchDateTimeComponents: DateTimeComponents.time,
+      
+    );
   }
 
   Future<void> cancelNotification(int id) async {

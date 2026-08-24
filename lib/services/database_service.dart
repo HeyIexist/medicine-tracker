@@ -23,9 +23,13 @@ class DatabaseService {
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           name TEXT NOT NULL,
           createdAt TEXT NOT NULL,
-          expiryDate TEXT NOT NULL
+          expiryDate TEXT,
+          reminderTime TEXT,
+          mealTiming TEXT
         )''');
       },
     );
   }
+
+  
 }
