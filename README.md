@@ -1,17 +1,40 @@
-# medicine_tracker
+# Medicine Tracker 💊
 
-A new Flutter project.
+A simple, smart Flutter application to track your medicines, set reminders, and monitor expiry dates.
 
-## Getting Started
+## 📱 Download APK
 
-This project is a starting point for a Flutter application.
+You can download the latest Android APK directly from the GitHub Releases page:
+- 📥 **[Download Latest APK](https://github.com/HeyIexist/medicine-tracker/releases/latest)**
 
-A few resources to get you started if this is your first Flutter project:
+---
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## ✨ Features
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- 📅 **Expiry Date Tracking**: Keep track of medicine expiration dates with color-coded alerts (Expired, Expiring Soon, Valid).
+- ⏰ **Daily Reminders**: Set specific reminder times with optional meal timings (Before meal / After meal).
+- 🔔 **Scheduled Notifications**: Receive timely notification alerts for medicine reminders and upcoming expiries.
+- 🤖 **AI Medicine Info**: Get quick details and info on medicines.
+
+---
+
+## 🛠️ Build from Source
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/HeyIexist/medicine-tracker.git
+   cd medicine-tracker
+   ```
+2. **Install dependencies:**
+   ```bash
+   flutter pub get
+   ```
+3. **Run the app:**
+   ```bash
+   flutter run
+   ```
+4. **Build release APK:**
+   ```bash
+   flutter build apk --release
+   ```
+
