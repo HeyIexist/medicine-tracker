@@ -58,7 +58,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       where: 'id = ?',
       whereArgs: [id],
     );
-    NotificationService.instance.cancelNotification(id + 100000);
+    NotificationService.instance.cancelNotification(id + 10000);
     await _deleteIfEmpty(id);
   }
 

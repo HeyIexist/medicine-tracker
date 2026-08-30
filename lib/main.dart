@@ -10,8 +10,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   tz.initializeTimeZones();
 
-  final timeZoneName = await FlutterTimezone.getLocalTimezone();
-  tz.setLocalLocation(tz.getLocation(timeZoneName.identifier));
+  final timeZone = await FlutterTimezone.getLocalTimezone();
+  tz.setLocalLocation(tz.getLocation(timeZone.identifier));
 
   await NotificationService.instance.initNotification();
   await DatabaseService.instance.database;

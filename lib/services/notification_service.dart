@@ -31,25 +31,29 @@ class NotificationService {
     required String name,
     required DateTime expiryDate,
   }) async {
-    final reminderDate = DateTime(
+    final now = tz.TZDateTime.now(tz.local);
+    final reminderDate = tz.TZDateTime(
+      tz.local,
       expiryDate.year,
       expiryDate.month,
       expiryDate.day - 7,
       9,
       0,
     );
-    final now = DateTime.now();
-    final androidDetails = AndroidNotificationDetails(
+    const androidDetails = AndroidNotificationDetails(
       'expiry_channel',
       'Medicine Expiry Alerts',
+      importance: Importance.max,
+      priority: Priority.max,
     );
-    final notificationDetails = NotificationDetails(android: androidDetails);
-    final androidScheduleMode = AndroidScheduleMode.alarmClock;
+    const notificationDetails = NotificationDetails(android: androidDetails);
+    const androidScheduleMode = AndroidScheduleMode.alarmClock;
     if (reminderDate.isAfter(now)) {
       final expiresIn = expiryDate.difference(now).inDays;
+
       await notificationPlugin.zonedSchedule(
         id: id + 10000,
-        scheduledDate: tz.TZDateTime.from(reminderDate, tz.local),
+        scheduledDate: reminderDate,
         notificationDetails: notificationDetails,
         androidScheduleMode: androidScheduleMode,
         title: '$name expires soon',
@@ -59,7 +63,7 @@ class NotificationService {
       final alreadyExpired = expiryDate.isBefore(now);
       final daysLeft = expiryDate.difference(now).inDays;
       await notificationPlugin.show(
-        id: id,
+        id: id + 10000,
         title: alreadyExpired ? '$name expired' : '$name expires soon',
         body: alreadyExpired
             ? 'Expired medicine found'
@@ -75,8 +79,9 @@ class NotificationService {
     required TimeOfDay time,
     String? mealTiming,
   }) async {
-    final now = DateTime.now();
-    var scheduledDate = DateTime(
+    final now = tz.TZDateTime.now(tz.local);
+    var scheduledDate = tz.TZDateTime(
+      tz.local,
       now.year,
       now.month,
       now.day,
@@ -86,26 +91,27 @@ class NotificationService {
     if (scheduledDate.isBefore(now)) {
       scheduledDate = scheduledDate.add(const Duration(days: 1));
     }
-    final androidDetails = AndroidNotificationDetails(
+    const androidDetails = AndroidNotificationDetails(
       'reminder_channel',
       'Medicine reminder alerts',
+      importance: Importance.max,
+      priority: Priority.max,
     );
-    final notificationDetails = NotificationDetails(android: androidDetails);
+    const notificationDetails = NotificationDetails(android: androidDetails);
     final mealText = mealTiming == 'before'
         ? ' (before meal)'
         : mealTiming == 'after'
         ? ' (after meal)'
         : '';
+
     await notificationPlugin.zonedSchedule(
-      
       id: id,
       title: 'Time to take $name',
-      body: 'Reminder to take your medicine $mealText',
-      scheduledDate: tz.TZDateTime.from(scheduledDate, tz.local),
+      body: 'Reminder to take your medicine$mealText',
+      scheduledDate: scheduledDate,
       notificationDetails: notificationDetails,
       androidScheduleMode: AndroidScheduleMode.alarmClock,
       matchDateTimeComponents: DateTimeComponents.time,
-      
     );
   }
 

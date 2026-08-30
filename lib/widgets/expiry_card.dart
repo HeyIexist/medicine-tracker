@@ -55,6 +55,7 @@ class ExpiryCard extends StatelessWidget {
                   onPressed: () => onUndo(medicine, index),
                 ),
                 duration: const Duration(seconds: 3),
+                persist: false,
               ),
             )
             .closed

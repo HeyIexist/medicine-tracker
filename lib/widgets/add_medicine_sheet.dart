@@ -56,7 +56,6 @@ class _AddMedicineSheetState extends State<AddMedicineSheet> {
 
     setState(() => _dateOrTimeError = null);
     _formKey.currentState!.save();
-    print('About to insert — mealTiming is: $_mealTiming');
     final db = await DatabaseService.instance.database;
     final id = await db.insert('medicines', {
       'name': _name,
@@ -70,7 +69,7 @@ class _AddMedicineSheetState extends State<AddMedicineSheet> {
 
     if (_pickedDate != null) {
       NotificationService.instance.scheduleExpiryNotification(
-        id: id + 1000,
+        id: id,
         name: _name!,
         expiryDate: _pickedDate!,
       );
@@ -81,6 +80,7 @@ class _AddMedicineSheetState extends State<AddMedicineSheet> {
         id: id,
         name: _name!,
         time: _reminderTime!,
+        mealTiming: _mealTiming,
       );
     }
 

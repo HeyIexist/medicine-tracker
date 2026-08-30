@@ -70,12 +70,14 @@ class ReminderCard extends StatelessWidget {
         messenger
             .showSnackBar(
               SnackBar(
+                
                 content: Text('${medicine['name']} reminder removed'),
                 action: SnackBarAction(
                   label: 'Undo',
                   onPressed: () => onUndo(medicine, index),
                 ),
                 duration: const Duration(seconds: 3),
+                persist: false,
               ),
             )
             .closed
